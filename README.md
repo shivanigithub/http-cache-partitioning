@@ -118,7 +118,7 @@ This section goes into the details of metrics for both of the partitioning appro
 *   Navigation start to largest contentful paint:
     *   No statistically significant change for both partitioning approaches.
 *   Browser jankiness:
-    *   An increase of 4.7% at the 99th percentile when partitioned by both top-frame-origin and frame-origin, no statistically significant change at other percentiles.
+    *   No statistically significant change for both partitioning approaches.
 *   Interactive timing delay for input processing:
     *   No statistically significant change for both partitioning approaches.
 
