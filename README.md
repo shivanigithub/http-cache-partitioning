@@ -47,7 +47,7 @@ Doing so prevents cache attacks such as the following:
 
 *   **Detect if a user has visited a specific site:** If the cached resource is specific to a particular site or to a particular cohort of sites, an adversary can detect user’s browsing history by checking if the cache has that resource.
 
-*   **Fingerprinting:** In addition to the above cache attacks, the cache can also be used to store cross-site super-cookies as a fingerprinting mechanism. To clear them the user has to delete their entire cache (not just a particular site). Since fingerprinting is neither transparent nor under the user’s control, it results in tracking that doesn’t respect user choice.
+*   **Tracking:** In addition to the above cache attacks, the cache can also be used to store cross-site super-cookies as a tracking mechanism. To clear them the user has to delete their entire cache (not just a particular site). Since such this is neither transparent nor under the user’s control, it results in tracking that doesn’t respect user choice.
 
 ## Choosing the Partitioning Key
 
