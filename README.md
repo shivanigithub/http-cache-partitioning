@@ -54,16 +54,16 @@ Doing so prevents cache attacks such as the following:
 This section details the pros and cons of the various possible partitioning keys.
 
 
-### Partition using top frame origin
+### Partition using top frame origin/site: Double keying
 
-Each frame’s cache is shared with all other frames on the page and with other pages with the same top-frame origin.
+Each frame’s cache is shared with all other frames on the page and with other pages with the same top-frame site.
 
 **Benefits**
 
 
 
-*   **Isolation between cross-origin pages:** Two top-frame documents with different origins will not share the cache, and therefore will not be able to determine if the other loaded a given resource.
-*   **Precedence in other browsers:** A variant of this approach (uses top frame eTLD+1 instead of top frame origin) has been implemented in Safari for over five years now.
+*   **Isolation between cross-site pages:** Two top-frame documents with different origins/sites will not share the cache, and therefore will not be able to determine if the other loaded a given resource.
+*   **Precedence in other browsers:** Partitioning using top frame eTLD+1 has been implemented in Safari for over five years now.
 
 **Challenges/Limitations**
 
@@ -74,18 +74,23 @@ This solution leads to the cache being shared across all of the subframes in a p
 As mentioned in the metrics details below, preliminary experiments with partitioning show that the overall cache miss rate increases by about 2 percentage points but changes to first contentful paint aren’t statistically significant and the overall fraction of bytes loaded from the network only increase by around 1.5 percentage points.
 
 
-### Partition using top frame origin and frame origin
+### Partition using top frame and frame origin/site: Triple keying
 
-Each frame’s cache is only shared with same-origin frames on documents from the same origin.
+Each frame’s cache is only shared with same-site frames on documents from the same top-level site.
 
-This solution uses the top-frame-origin and frame-origin as the cache partitioning key. 
+This solution uses both top-frame and frame sites as the cache partitioning key. 
 
 **Benefits**
 
 
 
-*   **Isolation between cross-origin pages**
-*   **Isolation between cross-origin frames on a page**
+*   **Isolation between cross-site pages**
+*   **Isolation between cross-site frames on a page**
+Double keying will solve the cross-site search and similar security attacks between top-level pages but not between frames, which can happen if:
+- A popular site embeds a malicious cross-origin iframe. 
+- A malicious top-level site embeds a popular site as an iframe. This will require that the popular site does not have a framebusting defense. The fact that defense against framing is an opt-in security feature, suggests there might be some sites with user sensitive data that could be protected against such attacks using triple keying.
+In general, using double keying does not prevent leaking information across cross-site frames.
+
 
 **Challenges/Limitations**
 
@@ -93,8 +98,13 @@ Performance.
 
 **Performance impact**
 
-Preliminary results for core metrics like first contentful paint, percentage of bytes served from the network and cache misses are the same as with using just top-frame-origin (mentioned in the above section). 
+Results for core metrics like first contentful paint, percentage of bytes served from the network and cache misses are the same as with using just top-frame-origin (mentioned in the above section). 
 
+**Proposed solution**
+* **Use top-frame and subframe as keys and use site instead of origin for the initial launch** *
+As detailed in the metrics below there isn't much performance difference between using just top-frame site or using both top frame and subframe in the key. Since the latter provides the added security benefit between cross-site frames, Chrome plans to use both in their partitioning key.
+
+It is likely for frames on a page to belong to the same site if not the same origin and we would like to continue giving those frames the performance benefits of caching. For this reason, we plan to go with scheme://etld+1 instead of origin for the initial launch. In the long term, since dependency on Publix Suffix List is not ideal, we would like to migrate to other more sustainable mechanisms like First Party Sets or use origin with an opt-out mechanism so that frames can opt-out from triple keying to double keying.
 
 ## Impact on metrics
 
@@ -113,9 +123,7 @@ This section goes into the details of metrics for both of the partitioning appro
 
 
 
-*   Navigation start to first contentful paint:
-    *   No statistically significant change for both partitioning approaches.
-*   Navigation start to largest contentful paint:
+*   Navigation start to first or largest contentful paint:
     *   No statistically significant change for both partitioning approaches.
 *   Browser jankiness:
     *   No statistically significant change for both partitioning approaches.
