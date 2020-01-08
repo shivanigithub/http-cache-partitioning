@@ -101,7 +101,8 @@ Performance.
 Results for core metrics like first contentful paint, percentage of bytes served from the network and cache misses are the same as with using just top-frame-origin (mentioned in the above section). 
 
 **Proposed solution**
-* **Use top-frame and subframe as keys and use site instead of origin for the initial launch** *
+* **Use top-frame and subframe as keys and use site instead of origin for the initial launch** 
+
 As detailed in the metrics below there isn't much performance difference between using just top-frame site or using both top frame and subframe in the key. Since the latter provides the added security benefit between cross-site frames, Chrome plans to use both in their partitioning key.
 
 It is likely for frames on a page to belong to the same site if not the same origin and we would like to continue giving those frames the performance benefits of caching. For this reason, we plan to go with scheme://etld+1 instead of origin for the initial launch. In the long term, since dependency on Publix Suffix List is not ideal, we would like to migrate to other more sustainable mechanisms like First Party Sets or use origin with an opt-out mechanism so that frames can opt-out from triple keying to double keying.
