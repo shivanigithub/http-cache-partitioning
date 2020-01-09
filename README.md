@@ -87,8 +87,8 @@ This solution uses both top-frame and frame domains as the cache partitioning ke
 *   **Isolation between cross-site pages**
 *   **Isolation between cross-site frames on a page**
 Double keying will solve the cross-site search and similar security attacks between top-level pages but not between frames, which can happen if:
-- A popular site embeds a malicious cross-site iframe. 
-- A malicious top-level site embeds a popular site as an iframe. This will require that the popular site does not have a framebusting defense. The fact that defense against framing is an opt-in security feature, suggests there might be some sites with user sensitive data that could be protected against such attacks using triple keying.
+    *  A popular site embeds a malicious cross-site iframe.
+    *  A malicious top-level site embeds a popular site as an iframe. This will require that the popular site does not have a framebusting defense. The fact that defense against framing is an opt-in security feature, suggests there might be some sites with user sensitive data that could be protected against such attacks using triple keying.
 In general, using double keying does not prevent leaking information across cross-site frames.
 
 
@@ -100,12 +100,12 @@ Performance.
 
 Results for core metrics like first contentful paint, percentage of bytes served from the network and cache misses are the same as with double keying (mentioned in the above section). 
 
-**Proposed solution**
-*   **Use top-frame and subframe as keys (Triple keying)**
+## Proposed solution
+### Use top-frame and subframe as keys (Triple keying)
 
 As detailed in the metrics below there isn't a big performance difference between double and triple keying. Since the latter provides the added security benefit between cross-site frames, Chrome plans to use both in their partitioning key.
 
-*   **Definition of same-site to use eTLD+1 for the initial launch**
+### Define same-site as scheme://eTLD+1 for the initial launch
 It is likely for frames on a page to belong to the same site if not the same origin and we would like to continue giving those frames the performance benefits of caching. For this reason, we plan to go with scheme://eTLD+1 instead of origin for the initial launch. In the long term, since dependency on Publix Suffix List is not ideal, the plan is to migrate to other more sustainable mechanisms like First Party Sets or use origin with an opt-out mechanism so that frames can opt-out from triple keying to double keying.
 
 ## Impact on metrics
