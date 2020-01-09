@@ -6,8 +6,8 @@
   - [Introduction](#introduction)
   - [Goals](#goals)
   - [Choosing the Partitioning Key](#choosing-the-partitioning-key)
-    - [Partition using top frame origin](#partition-using-top-frame-origin)
-    - [Partition using top frame origin and frame origin](#partition-using-top-frame-origin-and-frame-origin)
+    - [Partition using top frame site: Double keying](#partition-using-top-frame-site-double-keying)
+    - [Partition using top frame and frame site: Triple keying](#partition-using-top-frame-and-frame-site-triple-keying)
   - [Impact on metrics](#impact-on-metrics)
     - [Network traffic](#network-traffic)
     - [Page performance](#page-performance)
@@ -15,9 +15,8 @@
   - [Impact on APIs](#impact-on-apis)
     - [Fetch API](#fetch-api)
   - [Alternative solutions considered](#alternative-solutions-considered)
-    - [Partition using frame origin only](#partition-using-frame-origin-only)
-    - [Partition using the chain of origins](#partition-using-the-chain-of-origins)
-    - [Partitioning using eTLD+1](#partitioning-using-etld1)
+    - [Partition using frame only](#partition-using-frame-only)
+    - [Partition using the chain of frames](#partition-using-the-chain-of-frames)
   - [Stakeholder Feedback / Opposition](#stakeholder-feedback--opposition)
   - [Acknowledgements](#acknowledgements)
 
@@ -28,9 +27,9 @@
 
 ## Introduction
 
-Chrome’s HTTP cache is currently shared across all origins, with a single namespace for all resources regardless of which site the resource is fetched from. This opens the browser to a side-channel attack where one site can detect if another site has loaded a resource by checking if it’s in the cache. Such exploits have been demonstrated in the wild. 
+Chrome’s HTTP cache is currently shared across all sites, with a single namespace for all resources regardless of which site the resource is fetched from. This opens the browser to a side-channel attack where one site can detect if another site has loaded a resource by checking if it’s in the cache. Such exploits have been demonstrated in the wild. 
 
-Here, we propose to partition the HTTP cache to prevent documents from one origin from knowing if a resource from a cross-origin document load was cached or not. The exact key used to partition on is described later in the explainer. Firefox has also published an intent to implement to partition their cache, and Safari has partitioned their cache for several years now.
+Here, we propose to partition the HTTP cache to prevent documents from one site from knowing if a resource from a cross-origin document load was cached or not. The exact key used to partition on is described later in the explainer. Firefox has also published an intent to implement to partition their cache, and Safari has partitioned their cache for several years now.
 
 Such partitioning limits the reusability of third-party resources. Each site will need to load those third party resources (such as fonts or scripts) for themselves at least once. This increases network usage and may ultimately degrade page load performance. Chrome’s preliminary experiments with partitioning show that the overall cache miss rate increases by around 2% (more details below) but changes to first/largest contentful paint aren’t statistically significant. This may change as we flesh out the implementation and progress to larger populations but it’s an encouraging start.
 
@@ -54,7 +53,8 @@ Doing so prevents cache attacks such as the following:
 This section details the pros and cons of the various possible partitioning keys.
 
 
-### Partition using top frame origin/site: Double keying
+
+### Partition using top frame site: Double keying
 
 Each frame’s cache is shared with all other frames on the page and with other pages with the same top-frame site.
 
@@ -62,7 +62,7 @@ Each frame’s cache is shared with all other frames on the page and with other 
 
 
 
-*   **Isolation between cross-site pages:** Two top-frame documents with different origins/sites will not share the cache, and therefore will not be able to determine if the other loaded a given resource.
+*   **Isolation between cross-site pages:** Two top-frame documents whish are not same-site will not share the cache, and therefore will not be able to determine if the other loaded a given resource.
 *   **Precedence in other browsers:** Partitioning using top frame eTLD+1 has been implemented in Safari for over five years now.
 
 **Challenges/Limitations**
@@ -74,11 +74,11 @@ This solution leads to the cache being shared across all of the subframes in a p
 As mentioned in the metrics details below, preliminary experiments with partitioning show that the overall cache miss rate increases by about 2 percentage points but changes to first contentful paint aren’t statistically significant and the overall fraction of bytes loaded from the network only increase by around 1.5 percentage points.
 
 
-### Partition using top frame and frame origin/site: Triple keying
+### Partition using top frame and frame site: Triple keying
 
-Each frame’s cache is only shared with same-site frames on documents from the same top-level site.
+Each frame’s cache is only shared with same-site frames on documents from the same top-level domain.
 
-This solution uses both top-frame and frame sites as the cache partitioning key. 
+This solution uses both top-frame and frame domains as the cache partitioning key. 
 
 **Benefits**
 
@@ -87,7 +87,7 @@ This solution uses both top-frame and frame sites as the cache partitioning key.
 *   **Isolation between cross-site pages**
 *   **Isolation between cross-site frames on a page**
 Double keying will solve the cross-site search and similar security attacks between top-level pages but not between frames, which can happen if:
-- A popular site embeds a malicious cross-origin iframe. 
+- A popular site embeds a malicious cross-site iframe. 
 - A malicious top-level site embeds a popular site as an iframe. This will require that the popular site does not have a framebusting defense. The fact that defense against framing is an opt-in security feature, suggests there might be some sites with user sensitive data that could be protected against such attacks using triple keying.
 In general, using double keying does not prevent leaking information across cross-site frames.
 
@@ -98,14 +98,15 @@ Performance.
 
 **Performance impact**
 
-Results for core metrics like first contentful paint, percentage of bytes served from the network and cache misses are the same as with using just top-frame-origin (mentioned in the above section). 
+Results for core metrics like first contentful paint, percentage of bytes served from the network and cache misses are the same as with double keying (mentioned in the above section). 
 
 **Proposed solution**
-* **Use top-frame and subframe as keys and use site instead of origin for the initial launch** 
+*   **Use top-frame and subframe as keys (Triple keying)**
 
-As detailed in the metrics below there isn't much performance difference between using just top-frame site or using both top frame and subframe in the key. Since the latter provides the added security benefit between cross-site frames, Chrome plans to use both in their partitioning key.
+As detailed in the metrics below there isn't a big performance difference between double and triple keying. Since the latter provides the added security benefit between cross-site frames, Chrome plans to use both in their partitioning key.
 
-It is likely for frames on a page to belong to the same site if not the same origin and we would like to continue giving those frames the performance benefits of caching. For this reason, we plan to go with scheme://etld+1 instead of origin for the initial launch. In the long term, since dependency on Publix Suffix List is not ideal, we would like to migrate to other more sustainable mechanisms like First Party Sets or use origin with an opt-out mechanism so that frames can opt-out from triple keying to double keying.
+*   **Definition of same-site to use eTLD+1 for the initial launch**
+It is likely for frames on a page to belong to the same site if not the same origin and we would like to continue giving those frames the performance benefits of caching. For this reason, we plan to go with scheme://eTLD+1 instead of origin for the initial launch. In the long term, since dependency on Publix Suffix List is not ideal, the plan is to migrate to other more sustainable mechanisms like First Party Sets or use origin with an opt-out mechanism so that frames can opt-out from triple keying to double keying.
 
 ## Impact on metrics
 
@@ -116,8 +117,8 @@ This section goes into the details of metrics for both of the partitioning appro
 
 *   Fraction of bytes read from the network:
     *   Control: 65.9%
-    *   Partitioned using top-frame-origin: 66.4%
-    *   Partitioned using top-frame-origin and frame-origin:66.4%
+    *   Double keying: 66.4%
+    *   Triple keying: 66.4%
 
 
 ### Page performance
@@ -142,20 +143,20 @@ It also gives the metric for specific types of resources like 3rd party fonts, c
 
 *   Total cache miss rates
     *   Control: 52.7%
-    *   Partitioned using top-frame-origin: 54.4%
-    *   Partitioned using top-frame-origin and frame-origin: 54.7%
+    *   Double keying: 54.4%
+    *   Triple keying: 54.7%
 *   Cache miss rates for 3rd party fonts
     *   Control: 30.9%
-    *   Partitioned using top-frame-origin: 40.3%
-    *   Partitioned using top-frame-origin and frame-origin: 42%
+    *   Double keying: 40.3%
+    *   Triple keying: 42%
 *   Cache miss rates for 3rd party javascript files:
     *   Control: 29.5%
-    *   Partitioned using top-frame-origin: 35.2%
-    *   Partitioned using top-frame-origin and frame-origin: 37.15%
+    *   Double keying: 35.2%
+    *   Triple keying: 37.15%
 *   Cache miss rates for 3rd party css files:
     *   Control: 21%
-    *   Partitioned using top-frame-origin: 24.8%
-    *   Partitioned using top-frame-origin and frame-origin: 25.6%
+    *   Double keying: 24.8%
+    *   Triple keying 25.6%
 
 ## Impact on APIs
 
@@ -176,28 +177,28 @@ The fetch API has an 'only-if-cached' mechanism that allows sites to observe if 
 ## Alternative solutions considered
 
 
-### Partition using frame origin only
+### Partition using frame only
 
-Each frame’s cache is shared with all other frames of the same origin, regardless of the origin of the page they’re on.
+Each frame’s cache is shared with all other same-site frames, regardless of the top-level page they’re on.
 
-This solution only uses the request’s frame origin as the partitioning key. 
+This solution only uses the request’s frame as the partitioning key. 
 
 **Benefits**
 
 
 
-*   **Isolation between cross-origin frames:** This solution isolates two different cross origin frames from their cache accesses.
+*   **Isolation between cross-site frames:** This solution isolates two different cross-site frames from their cache accesses.
 
 **Challenges/Limitations**
 
-Tracking the user across different top level origins will be possible by storing persistent user identifiers via third party frames. 
+Tracking the user across different top-level sites will be possible by storing persistent user identifiers via third party frames. 
 
 
-### Partition using the chain of origins
+### Partition using the chain of frames
 
-Each frame’s cache is shared with other frames of the same origin, only if the chain of frame origins that nest the frames is the same.
+Each frame’s cache is shared with other same-site frames, only if the chain of frames that nest those frames is the same.
 
-This solution uses the request’s chain of frame origins as the partitioning key. 
+This solution uses the request’s chain of frames as the partitioning key. 
 
 **Benefits**
 
@@ -209,10 +210,6 @@ This solution uses the request’s chain of frame origins as the partitioning ke
 
 Performance. We do not have any data for this approach as of now.
 
-
-### Partitioning using eTLD+1
-
-Safari’s existing implementation uses the etld+1 of the top-frame of a page to partition their cache. We propose to use origin instead of eTLD+1 as it’s simpler to reason about, is scalable, and is the partitioning boundary used for most of the web’s storage mechanisms.
 
 ## Stakeholder Feedback / Opposition
 
