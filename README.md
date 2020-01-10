@@ -113,7 +113,8 @@ It is likely for frames on a page to belong to the same site if not the same ori
 
 ## Impact on metrics
 
-This section goes into the details of metrics for both of the partitioning approaches mentioned above:
+This section goes into the details of metrics for both of the partitioning approaches mentioned above.
+These metrics are from using origins. The results from using scheme://eTLD+1 are still in the initial stages and will be added in a few weeks time.
 
 
 ### Network traffic
@@ -129,19 +130,21 @@ This section goes into the details of metrics for both of the partitioning appro
 
 
 *   Navigation start to first or largest contentful paint:
-    *   No statistically significant change for both partitioning approaches.
+    *   Regression of 1-2% at the 95th and 99th percentiles.
 *   Browser jankiness:
     *   No statistically significant change for both partitioning approaches.
 *   Interactive timing delay for input processing:
-    *   No statistically significant change for both partitioning approaches.
+    *   Regression of 3%.
+*   Third party subframes' navigation start to first contentful paint:
+    *   No statistically significant change for double keying and triple keying shows a regression of 5% at median. This regression might change when using scheme:/eTLD+1 and will update here with those results.
+*   Blank text shown time (due to unavailable web font):
+    *   Double keying and triple keying show a regression of 4-5% at the median.
 
 
 ### Cache
 
-This section gives the increase in cache miss rates overall for all types of resources.
-
-It also gives the metric for specific types of resources like 3rd party fonts, css and js files. The 3rd party metrics is a good measure to see the impact on CDNs. Please note that at this time the 3rd party resources metrics are fairly new and we will watch how these numbers change over the next few weeks and update them here.
-
+This section gives the cache miss rates overall for all types of resources.
+It also gives the metric for specific types of resources like 3rd party fonts, css and js files. The 3rd party metrics is a good measure to see the impact on CDNs.
 
 
 *   Total cache miss rates
