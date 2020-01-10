@@ -109,7 +109,7 @@ Results for core metrics like first contentful paint, percentage of bytes served
 As detailed in the metrics below there isn't a big performance difference between double and triple keying. Since the latter provides the added security benefit between cross-site frames, Chrome plans to use both in their partitioning key.
 
 ### Define same-site as scheme://eTLD+1 for the initial launch
-It is likely for frames on a page to belong to the same site if not the same origin and we would like to continue giving those frames the performance benefits of caching. For this reason, we plan to go with scheme://eTLD+1 instead of origin for the initial launch. In the long term, since dependency on Publix Suffix List is not ideal, the plan is to migrate to other more sustainable mechanisms like First Party Sets or use origin with an opt-out mechanism so that frames can opt-out from triple keying to double keying.
+It is likely for frames on a page to belong to the same site if not the same origin and we would like to continue giving those frames the performance benefits of caching. For this reason, we plan to go with scheme://eTLD+1 instead of origin for the initial launch. In the long term, since dependency on Publix Suffix List is not ideal, the plan is to migrate to other more sustainable mechanisms like First Party Sets or use origin with an opt-out mechanism so that frames can opt-out from triple keying to double keying, if there is a need.
 
 ## Impact on metrics
 
