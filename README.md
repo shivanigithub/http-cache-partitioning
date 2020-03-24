@@ -34,7 +34,7 @@ Chrome’s HTTP cache is currently shared across all sites, with a single namesp
 
 Here, we propose to partition the HTTP cache to prevent documents from one site from knowing if a resource from a cross-origin document load was cached or not. The exact key used to partition on is described later in the explainer. Firefox has also published an intent to implement to partition their cache, and Safari has partitioned their cache for several years now.
 
-Such partitioning limits the reusability of third-party resources. Each site will need to load those third party resources (such as fonts or scripts) for themselves at least once. This increases network usage and may ultimately degrade page load performance. Chrome’s preliminary experiments with partitioning show that the overall cache miss rate increases by around 2% (more details below) but changes to first/largest contentful paint aren’t statistically significant. This may change as we flesh out the implementation and progress to larger populations but it’s an encouraging start.
+Such partitioning limits the reusability of third-party resources. Each site will need to load those third party resources (such as fonts or scripts) for themselves at least once. Chrome’s experiments with partitioning show that the overall network usage increases by around 2% (more details below) and first/largest contentful paint increase around 0.5% to 1%. 
 
 
 ## Goals
@@ -106,7 +106,7 @@ Results for core metrics like first contentful paint, percentage of bytes served
 ## Proposed solution
 ### Use top-frame and subframe as keys (Triple keying)
 
-As detailed in the metrics below there isn't a big performance difference between double and triple keying. Since the latter provides the added security benefit between cross-site frames, Chrome plans to use both in their partitioning key.
+Chrome's experiment results show that there isn't a big performance difference between double and triple keying. Since the latter provides the added security benefit between cross-site frames, Chrome plans to use triple keying.
 
 ### Define same-site as scheme://eTLD+1 for the initial launch
 It is likely for frames on a page to belong to the same site if not the same origin and we would like to continue giving those frames the performance benefits of caching. For this reason, we plan to go with scheme://eTLD+1 instead of origin for the initial launch. In the long term, since dependency on Publix Suffix List is not ideal, the plan is to migrate to other more sustainable mechanisms like First Party Sets or use origin with an opt-out mechanism so that frames can opt-out from triple keying to double keying, if there is a need.
