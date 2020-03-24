@@ -65,7 +65,7 @@ Each frame’s cache is shared with all other frames on the page and with other 
 
 
 
-*   **Isolation between cross-site pages:** Two top-frame documents whish are not same-site will not share the cache, and therefore will not be able to determine if the other loaded a given resource.
+*   **Isolation between cross-site pages:** Two top-frame documents which are not same-site will not share the cache, and therefore will not be able to determine if the other loaded a given resource.
 *   **Precedence in other browsers:** Partitioning using top frame eTLD+1 has been implemented in Safari for over five years now.
 
 **Challenges/Limitations**
@@ -113,32 +113,34 @@ It is likely for frames on a page to belong to the same site if not the same ori
 
 ## Impact on metrics
 
-This section goes into the details of metrics for both of the partitioning approaches mentioned above.
-These metrics are from using origins. The results from using scheme://eTLD+1 are still in the initial stages and will be added in a few weeks time.
+This section goes into the details of metrics for the proposed partitioning approach mentioned above (triple keying with scheme://eTLD+1).
 
 
 ### Network traffic
 
 *   Fraction of bytes read from the network:
-    *   Control: 65.9%
-    *   Double keying: 66.4%
-    *   Triple keying: 66.4%
+    *   Control: 66.2%
+    *   Triple keying: 67.6%
 
 
 ### Page performance
 
 
 
-*   Navigation start to first or largest contentful paint:
-    *   Regression of 1-2% at the 95th and 99th percentiles.
-*   Browser jankiness:
-    *   No statistically significant change for both partitioning approaches.
-*   Interactive timing delay for input processing:
-    *   Regression of 3%.
-*   Third party subframes' navigation start to first contentful paint:
-    *   No statistically significant change for double keying and triple keying shows a regression of 5% at median. This regression might change when using scheme:/eTLD+1 and will update here with those results.
-*   Blank text shown time (due to unavailable web font):
-    *   Double keying and triple keying show a regression of 4-5% at the median.
+*   Navigation start to first contentful paint
+    *   No regressions otherwise, +0.5 to +0.75% at the 75th, 95th and 99th percentiles.
+*   Navigation start to largest contentful paint
+    *   No regressions otherwise, +0.95% at the 95th percentile.
+*   Browser jankiness
+    *   No regression.
+*   Interactive timing delay for input processing
+    *   No regression.
+*   Third party subframes' navigation start to first contentful paint
+    *   +2.8% at the median
+*   Largest contentful paint for pages with 3rd party fonts
+    *   +1.8% at the median
+*   Blank text shown time (due to unavailable web font)
+    *   +3.3% at the median.
 
 
 ### Cache
@@ -148,21 +150,17 @@ It also gives the metric for specific types of resources like 3rd party fonts, c
 
 
 *   Total cache miss rates
-    *   Control: 52.7%
-    *   Double keying: 54.4%
-    *   Triple keying: 54.7%
+    *   Control: 54.4%
+    *   Triple keying: 57.7%
 *   Cache miss rates for 3rd party fonts
-    *   Control: 30.9%
-    *   Double keying: 40.3%
-    *   Triple keying: 42%
+    *   Control: 34.1%
+    *   Triple keying: 45.6%
 *   Cache miss rates for 3rd party javascript files:
-    *   Control: 29.5%
-    *   Double keying: 35.2%
-    *   Triple keying: 37.15%
+    *   Control: 30.8%
+    *   Triple keying: 38.2%
 *   Cache miss rates for 3rd party css files:
-    *   Control: 21%
-    *   Double keying: 24.8%
-    *   Triple keying 25.6%
+    *   Control: 23.65%
+    *   Triple keying 29.1%
 
 ## Impact on APIs
 
