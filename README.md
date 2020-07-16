@@ -34,7 +34,7 @@ Chrome’s HTTP cache is currently shared across all sites, with a single namesp
 
 Here, we propose to partition the HTTP cache to prevent documents from one site from knowing if a resource from a cross-origin document load was cached or not. The exact key used to partition on is described later in the explainer. Firefox has also published an intent to implement to partition their cache, and Safari has partitioned their cache for several years now.
 
-Such partitioning limits the reusability of third-party resources. Each site will need to load those third party resources (such as fonts or scripts) for themselves at least once. Chrome’s experiments with partitioning show that the overall network usage increases by around 2% (more details below) and first/largest contentful paint increase around 0.5% to 1%. 
+Such partitioning limits the reusability of third-party resources. Each site will need to load those third party resources (such as fonts or scripts) for themselves at least once. Chrome’s experiments with partitioning show that the overall network usage increases by around 4% (more details below) and first/largest contentful paint increase around 0.3%. 
 
 
 ## Goals
@@ -119,8 +119,8 @@ This section goes into the details of metrics for the proposed partitioning appr
 ### Network traffic
 
 *   Fraction of bytes read from the network:
-    *   Control: 66.2%
-    *   Triple keying: 67.6%
+    *   Control: 75%
+    *   Triple keying: 78%
 
 
 ### Page performance
@@ -128,20 +128,21 @@ This section goes into the details of metrics for the proposed partitioning appr
 
 
 *   Navigation start to first contentful paint
-    *   No regressions otherwise, +0.5 to +0.75% at the 75th, 95th and 99th percentiles.
+    *   No regressions otherwise, +0.32 (75th percentile), +0.75% (95th percentile), +0.97% (99th percentile).
 *   Navigation start to largest contentful paint
-    *   No regressions otherwise, +0.95% at the 95th percentile.
+    *   No regressions otherwise, +0.3% at the 75th percentile.
 *   Browser jankiness
     *   No regression.
 *   Interactive timing delay for input processing
     *   No regression.
 *   Third party subframes' navigation start to first contentful paint
-    *   +2.8% at the median
+    *   +1.5% to +1.8% at the various percentiles
 *   Largest contentful paint for pages with 3rd party fonts
-    *   +1.8% at the median
+    *   +0.2% to +0.6% at the various percentiles
 *   Blank text shown time (due to unavailable web font)
-    *   +3.3% at the median.
-
+    *   +2 to 5% at the various percentiles
+*   Top 1/3rd, middle 1/3rd and tail 1/3rd sites, by usage
+    *   for all of these subsets, the regressions in first and largest contentful paint are <1% in most quantiles and <= 0.5% at the median.
 
 ### Cache
 
@@ -150,17 +151,17 @@ It also gives the metric for specific types of resources like 3rd party fonts, c
 
 
 *   Total cache miss rates
-    *   Control: 54.4%
-    *   Triple keying: 57.7%
+    *   Control: 54%
+    *   Triple keying: 56% (+3.6%)
 *   Cache miss rates for 3rd party fonts
-    *   Control: 34.1%
-    *   Triple keying: 45.6%
+    *   Control: 21%
+    *   Triple keying: 28% (+33%)
 *   Cache miss rates for 3rd party javascript files:
-    *   Control: 30.8%
-    *   Triple keying: 38.2%
+    *   Control: 29%
+    *   Triple keying: 34% (+16%)
 *   Cache miss rates for 3rd party css files:
-    *   Control: 23.65%
-    *   Triple keying 29.1%
+    *   Control: 20%
+    *   Triple keying: 23% (+13%)
 
 ## Impact on APIs
 
