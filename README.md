@@ -106,7 +106,9 @@ Results for core metrics like first contentful paint, percentage of bytes served
 ## Proposed solution
 ### Use top-frame and subframe as keys (Triple keying)
 
-Chrome's experiment results show that there isn't a big performance difference between double and triple keying. Since the latter provides the added security benefit between cross-site frames, Chrome plans to use triple keying.
+Chrome's experiment results show that there isn't a big performance difference between double and triple keying. Since the latter provides the added security benefit between cross-site frames, Chrome plans to use triple keying. 
+
+Note that, as being discussed in this [issue](https://github.com/shivanigithub/http-cache-partitioning/issues/2), even with the current triple keying solution, it may be possible to snoop on the cached subresources of other frames on the page, due to existing x-site timing leaks. By creating an iframe using the subresource url that the malicious frame is interested in and then timing the onload handler event for that iframe, it can know with some probability if the resource came from the cache or network. To mitigte this, the resource site can use the opt-in security header [Content-Security-Policy: frame-ancestors 'self' or 'none'](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/frame-ancestors). In a future iteration, the browser may also mitigate this by default by adding a bit to the cache partitioning key that will be set for a navigation resource and will differentiate it from subresources. 
 
 ### Define site as scheme://eTLD+1 for the initial launch
 It is likely for frames on a page to belong to the same site if not the same origin and we would like to continue giving those frames the performance benefits of caching. For this reason, we plan to go with scheme://eTLD+1 instead of origin for the initial launch. In the long term, since dependency on Publix Suffix List is not ideal, the plan is to migrate to other more sustainable mechanisms like First Party Sets or use origin with an opt-out mechanism so that frames can opt-out from triple keying to double keying, if there is a need.
