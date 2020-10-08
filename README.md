@@ -164,6 +164,8 @@ It also gives the metric for specific types of resources like 3rd party fonts, c
 *   Cache miss rates for 3rd party css files:
     *   Control: 20%
     *   Triple keying: 23% (+13%)
+*   Cache miss rates with error ERR_CACHE_MISS (which is used for resources that can only be loaded from the cache e.g. for "only-if-cached" cases)
+    *    No change for main resources on all platforms and subresources on Android, and an increase from 0.21% to 0.25% for subresources only on desktop platforms.
 
 ## Impact on APIs
 
